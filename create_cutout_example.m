@@ -12,9 +12,9 @@ save_directory = fullfile(pwd,'tmp');
 
 % params of the generated image (one exapmpe)
 pano_id = 50;                   % example for image id
-f = 1000;                       % focal length
-u0 = 500;                       % principal point u0
-v0 = 500;                       % principal point v0
+f = 2000;                       % focal length
+u0 = 1920/2;                    % principal point u0
+v0 = 1080/2;                    % principal point v0
 img_size = [1920 1080];         % image size
 K = [f 0 u0; 0 f v0; 0 0 1];    % the calibration matrix 
 R = [1  0           0; ...
@@ -24,8 +24,8 @@ R = [1  0           0; ...
 
 %% process
 % load points in 3D & panorama poses
-% pts = load_pts( pts_file );
-% [ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( pano_file );
+pts = load_pts( pts_file );
+[ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( pano_file );
 
 % show pointcloud
 % show panorama coordinate systems
@@ -60,11 +60,11 @@ end
 
 % bilinear interpolation from original image
 img = bilinear_interpolation( img_size, uv, pano_img );
-figure(); imshow(img); set(gca, 'XDir','reverse'); 
+figure(); imshow(img); %set(gca, 'XDir','reverse'); 
 subfig(3,3,4,gcf); title('Rendered image');
 
 % project the factory pointcloud by related projection matrix P
-P = K * R * q2r(pano_q(:,pano_id)) * [eye(3) -pano_C(:,pano_id)];
+P = K * R * q2r(pano_q(:,pano_id))' * [eye(3) -pano_C(:,pano_id)];
 [ fpts, frgb ] = filterFieldView( ...
     struct('R', R * q2r(pano_q(:,pano_id)), 'C', pano_C(:,pano_id)), ...
     pts(1:3,:), pts(4:6,:));
@@ -88,15 +88,15 @@ cameras(1) = struct('camera_id',1,'model','SIMPLE_PINHOLE','width',img_size(1),.
 
 % 2) add images (one image in this example)
 images = containers.Map('KeyType','int64','ValueType','any');
-img_R = R * q2r(pano_q(:,pano_id));
+img_R = R * q2r(pano_q(:,pano_id))';
 images(1) = struct('image_id',1,'q',r2q(img_R)',...
-    'R',img_R,'t',-R*pano_C(:,pano_id),'camera_id',1,'name','pokus001.jpg','xys',uvs, ...
+    'R',img_R,'t',-img_R*pano_C(:,pano_id),'camera_id',1,'name','pokus001.jpg','xys',uvs', ...
     'point3D_ids',1:size(uvs,2));
 
 % 3) add poitns
 points3D = containers.Map('KeyType', 'int64', 'ValueType', 'any');
-for i = 1:size(fpts)
-    point = struct('point3D_id',i,'xyz',fpts(:,i),'rgb',frgb(:,i),'error',0,...
+for i = 1:size(fpts,2)
+    points3D(i) = struct('point3D_id',i,'xyz',fpts(:,i),'rgb',frgb(:,i),'error',0,...
         'track',[1 0]);
 end
 
