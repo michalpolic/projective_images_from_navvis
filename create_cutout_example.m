@@ -1,17 +1,17 @@
 % clear; close all; 
-
 addpath(fullfile(pwd,'codes'));
 
 %% settings
 debug = true;
 
-dataset_dir = fullfile(pwd,'..','SIE factory datasets','proc','2019-09-28_16.11.53');
-pts_file = fullfile(dataset_dir,'2019-09-28_16_txt.ply');
-pano_file = fullfile(dataset_dir,'pano','pano-poses.csv');
+dataset_dir = fullfile('d:/tmp/broca_data');
+pts_file = fullfile(dataset_dir,'cloud.xyz');
+poses_file = fullfile(dataset_dir,'cameras.json');
+pano_dir = fullfile(dataset_dir,'panos');
 save_directory = fullfile(pwd,'tmp');
 
 % params of the generated image (one exapmpe)
-pano_id = 50;                   % example for image id
+pano_id = 1;                    % example for image id
 f = 1000;                       % focal length
 u0 = 1920/2;                    % principal point u0
 v0 = 1080/2;                    % principal point v0
@@ -23,8 +23,9 @@ R = [1  0           0; ...
 
 %% process
 % load points in 3D & panorama poses
-pts = load_pts( pts_file );
-[ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( pano_file );
+% pts = load_pts( pts_file );
+% [ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( pano_file );
+[ pano_images, pano_poses, pano_C, pano_R ] = readJsonPoses(poses_file);
 
 % show pointcloud
 % show panorama coordinate systems

@@ -1,13 +1,12 @@
 % clear; close all; 
-
 addpath(fullfile(pwd,'codes'));
 
 %% settings
 debug = true;
 
-dataset_dir = fullfile(pwd,'..','SIE factory datasets','proc','2019-09-28_16.11.53');
-pts_file = fullfile(dataset_dir,'2019-09-28_16_txt.ply');
-pano_file = fullfile(dataset_dir,'pano','pano-poses.csv');
+dataset_dir = fullfile('d:/tmp/boca_cutouts_rendering');
+pts_file = fullfile(dataset_dir,'cloud.xyz');
+pano_dir = fullfile(dataset_dir,'pano','pano-poses.csv');
 save_directory = fullfile(pwd,'tmp');
 
 % params of the generated image (one exapmpe)
@@ -18,13 +17,13 @@ v0 = 1080/2;                    % principal point v0
 img_size = [1920 1080];         % image size
 K = [f 0 u0; 0 f v0; 0 0 1];    % the calibration matrix 
 R = [1  0           0; ...
-    0   cos(pi/2)     -sin(pi/2); ...
-    0   sin(pi/2)     cos(pi/2)];	% some rotation
+    0   cos(pi/3)     -sin(pi/3); ...
+    0   sin(pi/3)     cos(pi/3)];	% some rotation
 
 %% process
 % load points in 3D & panorama poses
 pts = load_pts( pts_file );
-[ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( pano_file );
+[ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( pano_dir );
 
 % show pointcloud
 % show panorama coordinate systems
@@ -42,11 +41,11 @@ figure; imshow(pano_img); subfig(3,3,2,gcf); title(sprintf('Panorama "%s"',pano_
 % -> we assume projection matrix P = K R q2r(pano_q(:,pano_id))' [I pano_C(:,pano_id)];
 R2 = q2r(pano_q(:,pano_id));
 C2 = pano_C(:,pano_id); 
-iQ = R2 * R' * inv(K); 
+iQ = R2 * R * inv(K); 
 [X,Y] = meshgrid(0:img_size(1)-1, 0:img_size(2)-1);
 X = X(:); Y = Y(:);
 proj = iQ * [X, Y, ones(length(X),1)]';
-proj = R * R2' * proj .* (ones(3,1) * 1./sqrt(sum(proj.^2)));     
+proj = R2' * proj .* (ones(3,1) * 1./sqrt(sum(proj.^2)));     
 beta_proj = -asin(proj(3,:));
 cos_beta_proj = real(cos(beta_proj));
 alpha_proj = atan2(proj(2,:)./cos_beta_proj, proj(1,:)./cos_beta_proj);
