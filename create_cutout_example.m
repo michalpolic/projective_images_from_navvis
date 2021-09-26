@@ -4,11 +4,11 @@ addpath(fullfile(pwd,'codes'));
 %% settings
 debug = true;
 
-dataset_dir = fullfile('d:/tmp/broca_data');
-pts_file = fullfile(dataset_dir,'cloud.xyz');
-poses_file = fullfile(dataset_dir,'cameras.json');
+dataset_dir = fullfile('C:\Users\zsd\CIIRC\data\matterport\Broca Living Lab with Curtains');
+pts_file = fullfile(dataset_dir,'matterpak','cloud.xyz');
+poses_file = fullfile(dataset_dir,'poses.csv');
 pano_dir = fullfile(dataset_dir,'panos');
-save_directory = fullfile(pwd,'tmp');
+save_directory = fullfile(dataset_dir,'tmp');
 
 % params of the generated image (one exapmpe)
 pano_id = 1;                    % example for image id
@@ -17,15 +17,16 @@ u0 = 1920/2;                    % principal point u0
 v0 = 1080/2;                    % principal point v0
 img_size = [1920 1080];         % image size
 K = [f 0 u0; 0 f v0; 0 0 1];    % the calibration matrix 
+fi = pi/2;
 R = [1  0           0; ...
-    0   cos(pi/3)     -sin(pi/3); ...
-    0   sin(pi/3)     cos(pi/3)];	% some rotation
-
+    0   cos(fi)     -sin(fi); ...
+    0   sin(fi)     cos(fi)];	% some rotation
+% R = eye(3);
 %% process
 % load points in 3D & panorama poses
-% pts = load_pts( pts_file );
-% [ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( pano_file );
-[ pano_images, pano_poses, pano_C, pano_R ] = readJsonPoses(poses_file);
+pts = load_pts( pts_file );
+[ pano_images, pano_poses, pano_C, pano_q ] = load_pano_poses( poses_file );
+% [ pano_images, pano_poses, pano_C, pano_R ] = readJsonPoses(poses_file);
 
 % show pointcloud
 % show panorama coordinate systems
@@ -36,7 +37,7 @@ if debug
 end 
 
 % load panorama
-pano_img = imread(fullfile(dataset_dir,'pano',pano_images{pano_id}));
+pano_img = imread(fullfile(pano_dir,pano_images{pano_id}));
 figure; imshow(pano_img); subfig(3,3,2,gcf); title(sprintf('Panorama "%s"',pano_images{pano_id}));
 
 % projection of sfere to plane  
@@ -107,5 +108,8 @@ for i = 1:size(fpts,2)
         'track',[1 0]);
 end
 
+if not(isfolder(save_directory))
+    mkdir(save_directory)
+end
 saveColmap( save_directory, cameras, images, points3D );
 

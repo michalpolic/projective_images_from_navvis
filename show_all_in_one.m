@@ -7,9 +7,9 @@ function show_all_in_one(pts,pano_C,pano_q,pano_poses,pano_images,pano_id,pano_i
     step = 10;
 	pano_pts_visual = pts(1:3,1:step:end)';
     pano_pts_visual_col = (1/255) * pts(4:6,1:step:end)';
-    filter = pano_pts_visual(:,1) > -15 & pano_pts_visual(:,1) < -5 & ...
-             pano_pts_visual(:,2) < -35 & pano_pts_visual(:,2) > -45; %& ...
-            % pano_pts_visual(:,3) > 4;
+    filter = pano_pts_visual(:,1) > -10 & pano_pts_visual(:,1) < 10 & ...
+             pano_pts_visual(:,2) > -10 & pano_pts_visual(:,2) < 10 & ...
+             pano_pts_visual(:,3) < 2.5;
     pano_pts_visual = pano_pts_visual(filter,:);
     pano_pts_visual_col = pano_pts_visual_col(filter,:);
     figure(); pcshow(pano_pts_visual, pano_pts_visual_col); hold on; 
@@ -17,6 +17,7 @@ function show_all_in_one(pts,pano_C,pano_q,pano_poses,pano_images,pano_id,pano_i
     
     % show the coordinate system of panorama
     show_pano_in_world( pano_C(:,pano_id), pano_q(:,pano_id), pano_poses(pano_id,:), pano_images(pano_id) );
+
 
     % show the sfere
     [cBeta,cAlpha] = meshgrid(  linspace(-pi/2,pi/2,size(pano_img,1)),...
