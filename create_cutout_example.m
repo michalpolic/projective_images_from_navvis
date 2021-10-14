@@ -7,15 +7,15 @@ debug = true;
 dataset_dir = fullfile('C:\Users\zsd\CIIRC\data\matterport\Broca Living Lab with Curtains');
 pts_file = fullfile(dataset_dir,'matterpak','cloud.xyz');
 poses_file = fullfile(dataset_dir,'poses.csv');
-pano_dir = fullfile(dataset_dir,'panos');
+pano_dir = fullfile(dataset_dir,'panos_rotated');
 save_directory = fullfile(dataset_dir,'tmp');
 
 % params of the generated image (one exapmpe)
-pano_id = 1;                    % example for image id
-f = 1000;                       % focal length
-u0 = 1920/2;                    % principal point u0
-v0 = 1080/2;                    % principal point v0
-img_size = [1920 1080];         % image size
+pano_id = 20;                    % example for image id
+f = (1038.135254 + 1036.468140) / 2;                    % focal length
+u0 = 664.387146;                    % principal point u0
+v0 = 396.142090;                    % principal point v0
+img_size = [1344 756];         % image size
 K = [f 0 u0; 0 f v0; 0 0 1];    % the calibration matrix 
 fi = pi/2;
 R = [1  0           0; ...

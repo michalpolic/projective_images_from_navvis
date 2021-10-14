@@ -17,16 +17,17 @@ function [ pts ] = load_pts( file_path )
     elseif ext == '.xyz'
     % load pointcloud from .xyz from matterport
         fileID = fopen(file_path,'r');
-        if isfile(fullfile(pwd,'tmp','cloud.mat'))
-            load(fullfile(pwd,'tmp','cloud.mat'),'pts_all')
+        if isfile(fullfile(pwd,'tmp','living_lab_without_curtains.mat'))
+            load(fullfile(pwd,'tmp','living_lab_without_curtains.mat'),'pts')
         else
             pts_all = fscanf(fileID,'%f');
+            pts = reshape(pts_all,6,length(pts_all)/6);
+            len = length(pts);
+            pts = [pts; ones(1,len)*255];
+            fclose(fileID);
         end
-
-        pts = reshape(pts_all,6,length(pts_all)/6);
-        len = length(pts);
-        pts = [pts; ones(1,len)*255];
-        fclose(fileID);
+        
+       
     end
 end
 
