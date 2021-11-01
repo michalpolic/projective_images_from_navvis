@@ -15,19 +15,21 @@ function [ pts ] = load_pts( file_path )
         pts = reshape(fscanf(fileID,'%f'),7,num_verteces);
         fclose(fileID);
     elseif ext == '.xyz'
+        dirs = split(filepath,'\');
+        name = dirs{end-1};
+        
     % load pointcloud from .xyz from matterport
-        fileID = fopen(file_path,'r');
-        if isfile(fullfile(pwd,'tmp','living_lab_without_curtains.mat'))
-            load(fullfile(pwd,'tmp','living_lab_without_curtains.mat'),'pts')
+        if isfile(fullfile(pwd,'tmp',[name '.mat']))
+            load(fullfile(pwd,'tmp',[name '.mat']),'pts')
         else
+            fileID = fopen(file_path,'r');
             pts_all = fscanf(fileID,'%f');
             pts = reshape(pts_all,6,length(pts_all)/6);
             len = length(pts);
             pts = [pts; ones(1,len)*255];
             fclose(fileID);
-        end
-        
-       
+            save(['tmp\' name '.mat'],'pts')
+        end      
     end
 end
 
