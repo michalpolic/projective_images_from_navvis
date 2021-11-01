@@ -3,8 +3,9 @@ close all;
 addpath(fullfile(pwd,'codes'));
 
 %% settings
-debug = 1;
-save_pointcloud_cutout = 1;
+debug = 0;
+debug_cutouts = 1;
+save_pointcloud_cutout = 0;
 
 dataset_dir = fullfile('C:\Users\zsd\CIIRC\data\matterport\Broca Living Lab without Curtains');
 pts_file = fullfile(dataset_dir,'matterpak','cloud.xyz');
@@ -12,8 +13,8 @@ poses_file = fullfile(dataset_dir,'poses.csv');
 pano_dir = fullfile(dataset_dir,'panos_rotated');
 save_directory = fullfile(dataset_dir,'tmp');
 
-rot_x = 115;
-rot_z = 0;
+rot_x = -115;
+rot_z = [30,60,90];
 
 % params of the generated image (one exapmpe)q
 pano_id = 2;                    % example for image id
@@ -56,7 +57,7 @@ for i = 1:length(rot_x)
         Rz = [cosd(fi_z) -sind(fi_z) 0; ...
             sind(fi_z)   cosd(fi_z)  0; ...
             0   0   1];
-        R = Rz*Rx;
+        R = Rz'*Rx';
 
         % projection of sfere to plane  
         % -> we assume projection matrix P = K R q2r(pano_q(:,pano_id))' [I -pano_C(:,pano_id)];
@@ -82,10 +83,10 @@ for i = 1:length(rot_x)
         imwrite(img,sprintf('cutouts/cutout_pano_%d_%d_%d.jpg', pano_id,fi_x,fi_z));
 
         % project the factory pointcloud by related projection matrix P
-        R = Rx*Rz;
-        P = K * R * R2' * [eye(3) -C2];
+        R = Rz*Rx; %R = (Rz'*Rx');
+        P = K * R' * R2' * [eye(3) -C2];
         [ fpts, frgb ] = filterFieldView( ...
-            struct('R', R * R2', 'C', C2), ...
+            struct('R', R' * R2', 'C', C2), ...
             pts(1:3,:), pts(4:6,:));
         uvs = round(h2a(P * a2h(fpts))); % projected points into image plane
 
@@ -97,7 +98,7 @@ for i = 1:length(rot_x)
 
         %show projected points in 2D image
         img_pts = projected_pts( uvs, img_size, frgb ); 
-        if debug
+        if debug || debug_cutouts
             figure(); 
             imshow(img_pts);
             subfig(3,3,6,gcf); title('Projected 3D points into the image using P');
@@ -107,7 +108,7 @@ for i = 1:length(rot_x)
         end
 
         %show projected points in 2D image & renderd image
-        if debug
+        if debug || debug_cutouts
             figure()
             imshow(0.5*img + 0.5*img_pts); 
             subfig(3,3,7,gcf); title('Projected 3D points into the image using P with cutout');
