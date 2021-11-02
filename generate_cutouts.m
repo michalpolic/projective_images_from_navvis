@@ -4,8 +4,8 @@ addpath(fullfile(pwd,'codes'));
 
 %% settings
 debug = 0;
-debug_cutouts = 1;
-save_pointcloud_cutout = 0;
+debug_cutouts = 0;
+save_pointcloud_cutout = 1;
 
 dataset_dir = fullfile('C:\Users\zsd\CIIRC\data\matterport\Broca Living Lab without Curtains');
 pts_file = fullfile(dataset_dir,'matterpak','cloud.xyz');
@@ -13,8 +13,8 @@ poses_file = fullfile(dataset_dir,'poses.csv');
 pano_dir = fullfile(dataset_dir,'panos_rotated');
 save_directory = fullfile(dataset_dir,'tmp');
 
-rot_x = -115;
-rot_z = [30,60,90];
+rot_x = [-135:30:-45];
+rot_z = [0:30:359];
 
 % params of the generated image (one exapmpe)q
 pano_id = 2;                    % example for image id
@@ -57,7 +57,7 @@ for i = 1:length(rot_x)
         Rz = [cosd(fi_z) -sind(fi_z) 0; ...
             sind(fi_z)   cosd(fi_z)  0; ...
             0   0   1];
-        R = Rz'*Rx';
+        R = Rz*Rx;
 
         % projection of sfere to plane  
         % -> we assume projection matrix P = K R q2r(pano_q(:,pano_id))' [I -pano_C(:,pano_id)];
@@ -69,21 +69,19 @@ for i = 1:length(rot_x)
         proj = iQ * [X, Y, ones(length(X),1)]';
         proj = R2' * proj .* (ones(3,1) * 1./sqrt(sum(proj.^2)));     
         beta_proj = -asin(proj(3,:));
-        cos_beta_proj = real(cos(beta_proj));
-        alpha_proj = atan2(proj(2,:)./cos_beta_proj, proj(1,:)./cos_beta_proj);
+        alpha_proj = -atan2(proj(2,:), proj(1,:));
         uv = real([	(beta_proj / (pi)) * size(pano_img,1) + size(pano_img,1)/2 + 1; ...
                     (alpha_proj / (2*pi)) * size(pano_img,2) + size(pano_img,2)/2 + 1]); 
 
         % bilinear interpolation from original image
-        img = flip(bilinear_interpolation( img_size, uv, pano_img ));
+        img = bilinear_interpolation( img_size, uv, pano_img );
         if debug
             figure(); imshow(img); %set(gca, 'XDir','reverse'); 
             subfig(3,3,4,gcf); title('Rendered image');
         end
-        imwrite(img,sprintf('cutouts/cutout_pano_%d_%d_%d.jpg', pano_id,fi_x,fi_z));
+        imwrite(img,sprintf('cutouts/cutout_pano_%d_%d_%d.jpg', pano_id-1,fi_x,fi_z));
 
         % project the factory pointcloud by related projection matrix P
-        R = Rz*Rx; %R = (Rz'*Rx');
         P = K * R' * R2' * [eye(3) -C2];
         [ fpts, frgb ] = filterFieldView( ...
             struct('R', R' * R2', 'C', C2), ...
@@ -104,7 +102,7 @@ for i = 1:length(rot_x)
             subfig(3,3,6,gcf); title('Projected 3D points into the image using P');
         end
         if save_pointcloud_cutout
-            imwrite(img_pts,sprintf('cutouts/cutout_pano_pts_%d_%d_%d.jpg', pano_id,fi_x,fi_z));
+            imwrite(img_pts,sprintf('cutouts/cutout_pano_pts_%d_%d_%d.jpg', pano_id-1,fi_x,fi_z));
         end
 
         %show projected points in 2D image & renderd image
@@ -114,13 +112,12 @@ for i = 1:length(rot_x)
             subfig(3,3,7,gcf); title('Projected 3D points into the image using P with cutout');
         end
         if save_pointcloud_cutout
-            imwrite(0.5*img + 0.5*img_pts,sprintf('cutouts/cutout_pts_cut_pano_%d_%d_%d.jpg', pano_id,fi_x,fi_z));
+            imwrite(0.5*img + 0.5*img_pts,sprintf('cutouts/cutout_pts_cut_pano_%d_%d_%d.jpg', pano_id-1,fi_x,fi_z));
         end
     end
 end
 
 q = r2q(R * R2');
-writematrix([C2;q]', sprintf('cutouts/pose%d.csv', pano_id));
 
 fprintf('pano %d\n',pano_id)
 fprintf('fi %f\n',fi_x)
