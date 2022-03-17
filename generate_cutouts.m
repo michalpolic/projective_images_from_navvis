@@ -3,24 +3,26 @@ close all;
 addpath(fullfile(pwd,'codes'));
 
 %% settings
-debug = 0;
-debug_cutouts = 0;
-save_pointcloud_cutout = 1;
+debug = 1;
+debug_cutouts = 1;
+save_pointcloud_cutout = 0;
 
-dataset_dir = fullfile('C:\Users\zsd\CIIRC\data\matterport\Broca Living Lab without Curtains');
+dataset_dir = fullfile('/home/ciirc/dubenma1/data/Broca Living Lab without Curtains');
 pts_file = fullfile(dataset_dir,'matterpak','cloud.xyz');
 poses_file = fullfile(dataset_dir,'poses.csv');
 pano_dir = fullfile(dataset_dir,'panos_rotated');
-save_directory = fullfile(dataset_dir,'cutouts_habitat');
+save_directory = fullfile(dataset_dir,'cutouts');
 
-rot_x = [-135:30:-45];
+rot_x = [-120:30:-60];
 rot_z = [0:30:359];
 
-% params of the generated image (one exapmpe)q           
-f = 1344/2/tan((66/180*pi)/2);                    % focal length
-u0 = 664.387146;                    % principal point u0
-v0 = 396.142090;                    % principal point v0
+% params of the generated image (one exapmpe)q   
+HFOV = 66;
+f = 1344/2/tan((HFOV/180*pi)/2);                    % focal length
 img_size = [1344 756];         % image size
+u0 = img_size(1)/2;                    % principal point u0
+v0 = img_size(2)/2;                    % principal point v0
+
 K = [f 0 u0; 0 f v0; 0 0 1];    % the calibration matrix 
 
 %% process
@@ -31,6 +33,7 @@ K = [f 0 u0; 0 f v0; 0 0 1];    % the calibration matrix
 % show pointcloud
 % show panorama coordinate systems
 if debug
+    pts(:,pts(3,:) > 2.5) = [];
     show_pointcloud( pts ); 
     subfig(3,3,1,gcf); hold on;
     show_pano_in_world( pano_C, pano_q, pano_poses, pano_images );
@@ -44,10 +47,7 @@ for pano_id = 1:size(pano_images,1)
     pano_img = imread(fullfile(pano_dir,pano_images{pano_id}));
     % figure; imshow(pano_img); subfig(3,3,2,gcf); title(sprintf('Panorama "%s"',pano_images{pano_id}));
 
-    % show all in one 
-    if debug
-        show_all_in_one(pts,pano_C,pano_q,pano_poses,pano_images,pano_id,pano_img,K,R,img_size);
-    end 
+  
 
     for i = 1:length(rot_x)
         for j = 1:length(rot_z)
@@ -75,6 +75,11 @@ for pano_id = 1:size(pano_images,1)
             alpha_proj = -atan2(proj(2,:), proj(1,:));
             uv = real([	(beta_proj / (pi)) * size(pano_img,1) + size(pano_img,1)/2 + 1; ...
                         (alpha_proj / (2*pi)) * size(pano_img,2) + size(pano_img,2)/2 + 1]); 
+                    
+            % show all in one 
+            if debug
+                show_all_in_one(pts,pano_C,pano_q,pano_poses,pano_images,pano_id,pano_img,K,R,img_size);
+            end 
 
             % bilinear interpolation from original image
             img = bilinear_interpolation( img_size, uv, pano_img );
@@ -102,7 +107,13 @@ for pano_id = 1:size(pano_images,1)
                 % show selected pointcloud
                 show_selected_pointcloud( fpts, frgb, pano_q, pano_C, pano_id  );
                 subfig(3,3,5,gcf); title('Selected subset of 3D points for projection');
+                
+                depth_img = depth_maps(uvs, img_size, fpts, C2);
+                figure;
+                imshow(depth_img/10);
             end
+            
+            
 
             %show projected points in 2D image
             img_pts = projected_pts( uvs, img_size, frgb ); 

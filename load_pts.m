@@ -15,7 +15,7 @@ function [ pts ] = load_pts( file_path )
         pts = reshape(fscanf(fileID,'%f'),7,num_verteces);
         fclose(fileID);
     elseif ext == '.xyz'
-        dirs = split(filepath,'\');
+        dirs = split(filepath,'/');
         name = dirs{end-1};
         
     % load pointcloud from .xyz from matterport
@@ -28,7 +28,7 @@ function [ pts ] = load_pts( file_path )
             len = length(pts);
             pts = [pts; ones(1,len)*255];
             fclose(fileID);
-            save(['tmp\' name '.mat'],'pts')
+            save(fullfile('tmp', [name '.mat']),'pts')
         end      
     end
 end
