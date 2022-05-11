@@ -8,8 +8,9 @@ debug_cutouts = 1;
 save_pointcloud_cutout = 0;
 
 dataset_dir = fullfile('/home/ciirc/dubenma1/data/Broca Living Lab without Curtains');
+% dataset_dir = fullfile('/home/ciirc/dubenma1/data/Broca Hospital with Curtains');
 pts_file = fullfile(dataset_dir,'matterpak','cloud.xyz');
-poses_file = fullfile(dataset_dir,'poses.csv');
+poses_file = fullfile(dataset_dir,'pano_poses.csv');
 pano_dir = fullfile(dataset_dir,'panos_rotated');
 save_directory = fullfile(dataset_dir,'cutouts');
 
@@ -33,9 +34,10 @@ K = [f 0 u0; 0 f v0; 0 0 1];    % the calibration matrix
 % show pointcloud
 % show panorama coordinate systems
 if debug
-    pts(:,pts(3,:) > 2.5) = [];
+    pts(:,pts(3,:) > 2) = [];
     show_pointcloud( pts ); 
-    subfig(3,3,1,gcf); hold on;
+    %subfig(3,3,1,gcf); 
+    hold on;
     show_pano_in_world( pano_C, pano_q, pano_poses, pano_images );
 end 
 
